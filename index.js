@@ -41,11 +41,16 @@ function getGitBranch () {
     exec('git status', function (err, out) {
       if (err) return reject(err)
       var branch = out.toString().match(/^On branch (.+)/)[1]
+
+      var match;
       if (branch === 'master') {
         resolve('')
+      } else if (match = branch.match(/^version-(.*)/)) {
+        resolve('v' + match[1]);
+      } else if (match = branch.match(/^transation-(.*)/)){
+        resolve(match[1]);
       } else {
-        var versionMatch = branch.match(/^version-(.*)/)
-        resolve(versionMatch ? 'v' + versionMatch[1] : 'branch-' + branch)
+        resolve('branch-' + branch);
       }
     })
   })
