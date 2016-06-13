@@ -47,7 +47,7 @@ function getGitBranch () {
         resolve('')
       } else if (match = branch.match(/^version-(.*)/)) {
         resolve('v' + match[1]);
-      } else if (match = branch.match(/^transation-(.*)/)){
+      } else if (match = branch.match(/^translation-(.*)/)){
         resolve(match[1]);
       } else {
         resolve('branch-' + branch);
