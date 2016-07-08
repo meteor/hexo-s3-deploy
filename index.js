@@ -5,6 +5,7 @@ var path = require('path')
 var exec = require('child_process').exec
 var s3sync = require('s3-sync')
 var readdirp = require('readdirp')
+var yaml = require('js-yaml')
 
 var s3Options = {
   key: process.env.AWS_KEY,
@@ -29,6 +30,7 @@ if (!(s3Options.key && s3Options.secret)) {
 }
 
 getGitBranch()
+  .then(getPrefix)
   .then(updateHexoConfig)
   .then(generateSite)
   .then(deployToS3)
@@ -56,9 +58,23 @@ function getGitBranch () {
   })
 }
 
-function updateHexoConfig (branch) {
-  if (!branch) {
-    return Promise.resolve(branch)
+function getPrefix(branch) {
+  var config = fs.readFileSync('_config.yml', 'utf-8');
+  var root = yaml.load(config).root;
+  var parts = [];
+  if (branch) {
+    parts.push(branch);
+  }
+  if (root) {
+    parts.push(root);
+  }
+  // either '', 'branch', 'root', or 'branch/root'
+  return parts.join('/');
+}
+
+function updateHexoConfig (prefix) {
+  if (!prefix) {
+    return Promise.resolve(prefix)
   } else {
     console.log('Updating hexo config...')
     return new Promise(function (resolve, reject) {
@@ -68,32 +84,31 @@ function updateHexoConfig (branch) {
           return m.slice(0, -1) + branch + '/\n'
         }
         content = content
-          .replace('\nurl: http://guide.meteor.com/\n', replacer)
-          .replace('\nroot: /\n', replacer)
+          .replace('\nroot: .*\n', replacer)
         fs.writeFile('_config.yml', content, function (err) {
           if (err) return reject(err)
           console.log('done.')
-          resolve(branch)
+          resolve(prefix)
         })
       })
     })
   }
 }
 
-function generateSite (branch) {
+function generateSite (prefix) {
   console.log('Generating static site...')
   return new Promise(function (resolve, reject) {
     exec('hexo generate', function (err) {
       if (err) return reject(err)
       console.log('done.')
-      resolve(branch)
+      resolve(prefix)
     })
   })
 }
 
-function deployToS3 (branch) {
+function deployToS3 (prefix) {
   console.log('deploying to S3...')
-  s3Options.prefix = branch ? branch + '/' : ''
+  s3Options.prefix = prefix ? prefix + '/' : ''
   var fileOptions = { root: 'public' }
   readdirp(fileOptions)
     .pipe(s3sync(s3Options).on('data', function(file) {
