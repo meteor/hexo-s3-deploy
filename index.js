@@ -60,16 +60,16 @@ function getGitBranch () {
 
 function getPrefix(branch) {
   var config = fs.readFileSync('_config.yml', 'utf-8');
-  var root = yaml.load(config).root;
-  var parts = [];
+  var root = yaml.load(config).root.replace(/\//g, '')
+  var parts = []
   if (branch) {
-    parts.push(branch);
+    parts.push(branch)
   }
   if (root) {
-    parts.push(root);
+    parts.push(root)
   }
   // either '', 'branch', 'root', or 'branch/root'
-  return parts.join('/');
+  return parts.join('/')
 }
 
 function updateHexoConfig (prefix) {
@@ -80,11 +80,8 @@ function updateHexoConfig (prefix) {
     return new Promise(function (resolve, reject) {
       fs.readFile('_config.yml', 'utf-8', function (err, content) {
         if (err) return reject(err)
-        function replacer (m) {
-          return m.slice(0, -1) + branch + '/\n'
-        }
         content = content
-          .replace('\nroot: .*\n', replacer)
+          .replace('\nroot: .*\n', 'root: /' + prefix + '/')
         fs.writeFile('_config.yml', content, function (err) {
           if (err) return reject(err)
           console.log('done.')
@@ -107,7 +104,7 @@ function generateSite (prefix) {
 }
 
 function deployToS3 (prefix) {
-  console.log('deploying to S3...')
+  console.log('deploying to S3 at "' + prefix + '"...')
   s3Options.prefix = prefix ? prefix + '/' : ''
   var fileOptions = { root: 'public' }
   readdirp(fileOptions)
