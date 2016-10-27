@@ -35,7 +35,9 @@ getGitBranch()
   .then(generateSite)
   .then(deployToS3)
   .catch(function (err) {
-    console.warn(err)
+    console.warn(err);
+    // Exit with an error code so deploy fails.
+    process.exit(1);
   })
 
 function getGitBranch () {
