@@ -1,6 +1,6 @@
 {
   "name": "hexo-s3-deploy",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Simple script to deploy a hexo site to s3, with support for versioning",
   "bin": {
     "hexo-s3-deploy": "index.js"
